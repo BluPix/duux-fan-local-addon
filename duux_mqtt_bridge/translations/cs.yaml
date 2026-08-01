@@ -1,0 +1,10 @@
+configuration:
+  language:
+    name: "Jazyk entit"
+    description: "Cílový jazyk pro entity v Home Assistantu (auto = automatická detekce, cs = čeština, en = angličtina, nl = holandština, de = němčina)"
+  log_level:
+    name: "Úroveň logování"
+    description: "Podrobnost logů doplňku (info nebo debug)"
+  broker_port:
+    name: "Port serveru"
+    description: "Port pro připojení ventilátorů Duux přes TLS (výchozí 443)"

@@ -1,0 +1,10 @@
+configuration:
+  language:
+    name: "Language"
+    description: "Target language for Home Assistant entities (auto, cs, en, nl, de)"
+  log_level:
+    name: "Log level"
+    description: "Addon logging detail (info or debug)"
+  broker_port:
+    name: "Broker Port"
+    description: "Port for Duux devices to connect via TLS (default 443)"

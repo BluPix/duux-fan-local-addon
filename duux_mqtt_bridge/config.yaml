@@ -1,0 +1,40 @@
+name: "Duux MQTT Bridge"
+version: "1.0.4"
+slug: "duux_mqtt_bridge"
+description: "Bridges Duux smart devices (fans, purifiers) from cloud MQTT to local Home Assistant control"
+url: "https://github.com/BluPix/duux-fan-local-addon"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+host_network: true
+homeassistant_api: true
+hassio_api: true
+auth_api: true
+init: false
+services:
+  - mqtt:need
+map:
+  - ssl:rw
+schema:
+  mqtt_host: str?
+  mqtt_port: int?
+  mqtt_username: str?
+  mqtt_password: str?
+  broker_port: int?
+  log_level: "list(debug|info|warning|error)?"
+  language: "list(auto|cs|en|nl|de)?"
+options:
+  mqtt_host: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+  broker_port: 443
+  log_level: "info"
+  language: "auto"
+ports:
+  443/tcp: 443
+ports_description:
+  443/tcp: "Duux device MQTT over TLS"
+startup: services
+boot: auto

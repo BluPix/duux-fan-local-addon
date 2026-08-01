@@ -1,231 +1,94 @@
-[![GitHub Release][releases-shield]][releases]
-[![License][license-shield]][license]
-[![hacs][hacs-badge]][hacs]
-[![pre-commit][pre-commit-shield]][pre-commit]
-[![Black][black-shield]][black]
-
-# 🌀 Duux Local - Home Assistant Integration
-
-**Take back control of your Duux smart devices - locally, privately, and cloud-free.**
-
-This project allows you to use your **Duux smart devices** (fans, air purifiers, heaters, humidifiers, etc.) entirely outside of Duux’s cloud ecosystem by redirecting their MQTT communication to a **local broker**, giving you **full local control** via **Home Assistant**.
-
-No cloud. No account. No lag.
-
-## Supported devices
-
-This integration uses a flexible Device Profile architecture designed to easily embrace the entire Duux product family.
-
-**Currently officially supported:**
-- **Duux Whisper Flex** (Fan)
-- **Duux Whisper Flex 2** (Fan)
-- **Duux Whisper Flex Ultimate** (Fan)
-- **Duux Bright 2** (Air Purifier)
-
-
-### Help expand support
-
-If you own any other devices that connect to the Duux Cloud (Dehumidifiers, Heaters, other Fans/Humidifiers/Purifiers, Air Conditioners), you can help add support!
-Simply capture your device's MQTT payloads and open an Issue or a Pull Request with your device's specifications.
-
-## Installation via HACS
-
-This integration is not (yet) available in the official HACS default repository list.
-However, you can easily add it as a **custom repository**:
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.][myha-repo-badge]][myha-repo]
-
-1. Open **HACS** in your Home Assistant interface
-2. Click the **three dots (⋮)** in the top-right corner and select **"Custom repositories"**
-3. Paste the following URL:
-   `https://github.com/LouisR-git/duux-fan-local`
-4. Select **"Integration"** as the category
-5. Click **Add**, then search for `Duux Fan Local` in HACS and install it
-6. Restart Home Assistant to finalize the setup
-
-The integration will now appear like any standard Home Assistant integration.
-
-### Initial setup
-
-1. Follow the **instructions below** to install the required prerequisites:
-   - ✅ **DNS redirection** (reroute Duux API calls to your local Broker)
-   - ✅ **MQTT Broker** (Mosquitto, EMQX, ...)
-
-2. In Home Assistant, go to `Settings > Devices & Services > Add Integration` and search for `Duux Fan Local`.
-3. Provide your **MQTT broker credentials** (or leave blank for anonymous) and adjust the **MQTT Host and Port** if necessary.
-4. Select your **device model** from the list.
-5. Give your device a friendly name.
-6. Enter the **MAC address** of your Duux device.
-   > 💡 You can find it in your router’s connected devices list.
-7. Click **Submit** and enjoy local control of your device!
-
-### Screenshots
-
-![config_flow](docs/screenshots/config_flow.png)
-![controls](docs/screenshots/controls.png)
-![fan](docs/screenshots/fan_entity.png)
-![sensors](docs/screenshots/sensors.png)
-
-## Prerequisites
-
-Duux devices communicate with the cloud using **MQTT over TLS**.
-By spoofing the cloud hostname and running your own MQTT broker, you can intercept this traffic and integrate the devices directly into Home Assistant.
-
-You’ll need:
-
-- **Control over your local DNS resolution** (AdGuard, CoreDNS, dnsmasq…)
-- **A self-hosted MQTT broker**, default reachable as `collector3.cloudgarden.nl` on port 443 (can be customized during integration setup)
-- Basic Linux CLI knowledge
-
-## Local DNS spoofing
-
-From your local DNS server, redirect the Duux cloud MQTT hostname to your local MQTT server’s IP.
-```
-collector3.cloudgarden.nl → 192.168.x.x
-```
-
-### Example: AdGuard DNS rewrite
-
-Go to AdGuard → Settings → DNS Rewrites
-
-### Example: Ubiquiti Unifi Gateway
-
-Go to Console → Settings → Policy Engine → DNS → Create a new `Host (A)` entry
-
-### Reboot the device after DNS changes
-Unplug → remove the battery (if applicable) → wait ~1 second → reinsert → power on.
-
-
-## Setting up a local MQTT broker
-
-### Option A - EMQX (TLS + Authentication) - **Recommended**
-- **Goal:** A robust local setup with TLS encryption and username/password authentication.
-- 📖 See the [EMQX installation guide](docs/guide-emqx.md)
-
-### Option B - Mosquitto (Anonymous TLS)
-- **Goal:** The quickest option for labs or testing environments.
-- ⚠️ **Security:** Not secure (anonymous access).
-- 📖 See the [Mosquitto installation guide](docs/guide-mosquitto.md)
-
-
-
-## Supported Features/Models
-
-### Whisper Flex
-
-| Feature             |   Key    | Command Payload    | Value X=                                          |
-|---------------------|----------|--------------------|---------------------------------------------------|
-| **Power**           | `power`  | `tune set power X` | `0`: off, `1`: on                                 |
-| **Mode**            | `mode`   | `tune set mode X`  | `0`: fan mode, `1`: natural wind, `2`: night mode |
-| **Speed**           | `speed`  | `tune set speed X` | `1` to `26`                                       |
-| **Timer**           | `timer`  | `tune set timer X` | `0` to `12` hours                                 |
-| **Horizontal Osc.** | `swing`  | `tune set swing X` | `0`: off, `1`: on                                 |
-| **Vertical Osc.**   | `tilt`   | `tune set tilt X`  | `0`: off, `1`: on                                 |
-
-
-### Whisper Flex 2
-| Feature             |   Key    | Command Payload     | Value X=                               |
-|---------------------|----------|---------------------|----------------------------------------|
-| **Power**           | `power`  | `tune set power X`  | `0`: off, `1`: on                      |
-| **Mode**            | `mode`   | `tune set mode X`   | `0`: fan mode, `1`: natural wind       |
-| **Speed**           | `speed`  | `tune set speed X`  | `1` to `30`                            |
-| **Timer**           | `timer`  | `tune set timer X`  | `0` to `12` hours                      |
-| **Horizontal Osc.** | `horosc` | `tune set horosc X` | `0`: off, `1`: 30°, `2`: 60°, `3`: 90° |
-| **Vertical Osc.**   | `verosc` | `tune set verosc X` | `0`: off, `1`: 45°, `2`: 100°          |
-| **Night Mode**      | `night`  | `tune set night X`  | `0`: off, `1`: on                      |
-| **Child Lock**      | `lock`   | `tune set lock X`   | `0`: off, `1`: on                      |
-| **Battery Level**   | `batlvl` | N/A                 | `0` to `10`                            |
-| **Charging Status** | `batcha` | N/A                 | `0`: not charging , `1`: charging      |
-
-### Whisper Flex Ultimate
-
-| Feature             |   Key    | Command Payload     | Value X=                                          |
-|---------------------|----------|---------------------|---------------------------------------------------|
-| **Power**           | `power`  | `tune set power X`  | `0`: off, `1`: on                                 |
-| **Mode**            | `mode`   | `tune set mode X`   | `0`: regular, `1`: natural, `2`: night            |
-| **Speed**           | `speed`  | `tune set speed X`  | `1` to `30`                                       |
-| **Timer**           | `timer`  | `tune set timer X`  | `0` to `12` hours                                 |
-| **Horizontal Osc.** | `swing`  | `tune set swing X`  | `0`: off, `1`: 30°, `2`: 60°, `3`: 90°           |
-| **Vertical Osc.**   | `tilt`   | `tune set tilt X`   | `0`: off, `1`: 90°, `2`: 105°                    |
-| **Setpoint**        | `sp`     | `tune set sp X`     | `17` to `28` °C                                   |
-
-### Duux Bright 2
-| Feature             |   Key    | Command Payload     | Value X=                               |
-|---------------------|----------|---------------------|----------------------------------------|
-| **Power**           | `power`  | `tune set power X`  | `0`: off, `1`: on                      |
-| **Night Mode**      | `night`  | `tune set mode X`   | `0`: normal, `1`: night mode           |
-| **Speed**           | `speed`  | `tune set speed X`  | `0` to `4` (0 is auto)                 |
-| **ION Setting**     | `ion`    | `tune set ion X`    | `0`: off, `1`: on                      |
-| **Filter Life**     | `filter` | N/A                 | `0` to `100` (%)                       |
-| **PPM 10**          | `ppm`    | N/A                 | µg/m³                                  |
-| **Air Quality**     | `AQ`     | N/A                 | AQI value                              |
-| **TVOC**            | `TVOC`   | N/A                 | µg/m³                                  |
-
-### Known Issues
-
-- **Charging Status** does not update automatically when the battery is fully charged.
-  The device only refreshes this attribute when the Power state changes.
-   This is a **firmware limitation**.
-
-
-## Details
-
-The devices use MQTT topics to report their state and receive commands.
-
-### Default MQTT Broker Endpoint
-```
-mqtts://collector3.cloudgarden.nl:443
-```
-
-### Device publishes to:
-
-| Topic                         | Example Payload                                                                 |
-|-------------------------------|---------------------------------------------------------------------------------|
-| `sensor/{device_id}/in`       | `{"sub":{"Tune":[{"uid":"xyz","power":1,"mode":0,"speed":10,"timer": 0,"horosc": 0,"verosc": 0,"lock": 0,"night": 1,"batcha": 0,"batlvl": 10}]}}` |
-| `sensor/{device_id}/online`   | `{"online":true,"connectionType":"mqtt"}`                                       |
-| `sensor/{device_id}/update`   | `{"pid":"xyz","tune":"DUUX Whisper Flex 2"}`                                    |
-
-> The device publishes data immediately when a change occurs, and otherwise every 30 seconds to keep the online status active.
-
-
-### Device subscribes to:
-
-| Topic                          | Example Payload             |
-|--------------------------------|-----------------------------|
-| `sensor/{device_id}/command`   | `tune set speed 10`         |
-| `sensor/{device_id}/config`    | _(Unused)_                  |
-| `sensor/{device_id}/fw`        | _(Unused)_                  |
-
-
-## Result
-
-Your Duux device is now fully **cloud-free** and controllable through **your local network** and **Home Assistant**.
-Enjoy full privacy, instant response times, and true independence from proprietary services.
-
-> **Note:** When connected to your local MQTT, the device will no longer be able to receive firmware updates from the manufacturer.
-> Disable local DNS forwarding and restart your device to access the web again.
-
-## Credits
-
-Based on reverse engineering, packet sniffing, vibe coding ~~and a lot of fan noise~~.
-A special thanks to the Home Assistant community for their valuable insights and contributions, especially the discussion in [this topic][ha-forum-duux-topic] which greatly helped this integration.
-Contributions welcome! 🛠️
-
+# 🌀 Duux MQTT Bridge — Home Assistant Add-on
+
+> ⚠️ **DISCLAIMER & MAINTENANCE NOTE:**
+> **This project is 100% AI Slop / Vibe Coded** (built using Google Antigravity AI agent).
+> It is based on and inspired by the original work in [LouisR-git/duux-fan-local](https://github.com/LouisR-git/duux-fan-local).
+> It was created as a standalone Home Assistant Add-on to solve local control for my own **Duux smart device** without relying on proprietary cloud services.
+> 
+> **I only own a single Duux device and do not have the time, hardware, or resources to further expand or maintain this project.**
+> Now that my own device works, I am stepping away from active development. If it works for you, awesome! If you want to add support for other devices or fix bugs, **please feel free to FORK THIS REPOSITORY and take over development!** 🚀
 
 ---
 
-<!-- badge -->
-[hacs]: https://hacs.xyz
-[hacs-badge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[license]: https://github.com/LouisR-git/duux-fan-local/blob/main/LICENSE
-[license-shield]: https://img.shields.io/github/license/LouisR-git/duux-fan-local.svg?style=for-the-badge
-[releases]: https://github.com/LouisR-git/duux-fan-local/releases
-[releases-shield]: https://img.shields.io/github/release/LouisR-git/duux-fan-local.svg?style=for-the-badge
-[pre-commit]: https://github.com/pre-commit/pre-commit
-[pre-commit-shield]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=for-the-badge
-[black]: https://github.com/psf/black
-[black-shield]: https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge
-[myha-repo]: https://my.home-assistant.io/redirect/hacs_repository/?repository=duux-fan-local&category=Integration&owner=LouisR-git
-[myha-repo-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
-<!-- ref -->
-[ha-forum-duux-topic]: https://community.home-assistant.io/t/experience-integrating-duux-products/386403
+## 💡 Why this project exists (The Problem & The Solution)
+
+Duux smart devices (like the **Duux Whisper Flex 2**, **Whisper Flex Ultimate**, **Bright 2**, etc.) communicate with the Duux Cloud (`collector3.cloudgarden.nl`) via **MQTT over TLS on port 443**.
+
+Normally, taking back local control of these devices required:
+1. Running a complex external MQTT broker (like EMQX or standalone Mosquitto) on port 443.
+2. Generating custom TLS/SSL certificates and configuring reverse proxies.
+3. Writing manual YAML configurations or custom integrations with hardcoded MAC addresses.
+
+### 🌟 The Solution: Duux MQTT Bridge Add-on
+
+This project is a standalone **Home Assistant OS Add-on** that:
+- Runs an embedded, lightweight Python MQTT server directly on **port 443 (TLS)**.
+- Automatically generates self-signed TLS certificates for `collector3.cloudgarden.nl`.
+- Intercepts incoming connections from Duux devices on your local network.
+- Decodes Duux's nested MQTT JSON payloads (`{"sub":{"Tune":[{...}]}}`).
+- Automatically creates and updates entities in Home Assistant via **standard HA MQTT Discovery** (`homeassistant/fan/...`, `homeassistant/number/...`, `homeassistant/select/...`).
+
+No manual MAC address entry. No complex certificate setups. Zero-config local control!
+
+---
+
+## ⚡ Quick Start / Installation
+
+### 1. Install the Add-on in Home Assistant OS
+
+1. Open **Home Assistant** → **Settings** → **Apps** (or **Add-ons**) → **App Store** (or **Add-on Store**).
+2. Click the **three dots (⋮)** in the top-right corner → **Repositories**.
+3. Add this repository URL:
+   `https://github.com/BluPix/duux-fan-local-addon`
+4. Search for **Duux MQTT Bridge** and click **Install**.
+5. Click **Start**.
+
+*(Note: The Add-on automatically connects to your local Home Assistant Mosquitto broker using Supervisor auto-discovery. You don't need to configure any passwords!)*
+
+### 2. Local DNS Rewrite (The Only Required Step)
+
+In your local DNS resolver (AdGuard Home, Pi-hole, UniFi Gateway, or Router DNS), add a DNS rewrite rule:
+
+```text
+collector3.cloudgarden.nl  ➔  <YOUR_HOME_ASSISTANT_IP> (e.g. 10.0.0.9)
+```
+
+### 3. Restart your Duux Device
+
+Unplug your Duux fan/purifier from power for 5 seconds and plug it back in. 
+
+The device will connect to your Home Assistant IP on port 443, perform the TLS handshake with the add-on, and **all entities (Fan speed, modes, night mode, child lock, oscillation, battery level) will automatically appear in Home Assistant!** 🎉
+
+---
+
+## 📱 Supported Devices & Features
+
+### Duux Whisper Flex 2 (Smart)
+- 🌀 **Fan Control**: Power, Speed (1-30), Fan Mode (Regular / Natural Wind)
+- ↔️ **Horizontal Oscillation**: Off, 30°, 60°, 90°
+- ↕️ **Vertical Oscillation**: Off, 45°, 100°
+- 🌙 **Night Mode**: On / Off
+- 🔒 **Child Lock**: On / Off
+- ⏱️ **Timer**: 0 to 12 hours
+- 🔋 **Battery Sensors**: Battery Level (%) & Charging Status
+
+### Duux Bright 2 (Air Purifier) & Whisper Flex Ultimate
+- Supported via protocol parser mapping.
+
+---
+
+## 🧪 Technical Details
+
+- **Port 443 Listener**: `asyncio` TLS server running inside Docker with `host_network: true`.
+- **MQTT 3.1.1 Parser**: Lightweight custom stdlib parser (`duux_mqtt_bridge/rootfs/opt/duux_bridge/mqtt_protocol.py`).
+- **HA Bridge**: Translates device state (`sensor/{mac}/in`) to HA state topics and forwards HA commands (`duux/{mac}/set/...`) back to device command topics (`sensor/{mac}/command`).
+- **Cert Manager**: Auto-generates 10-year RSA 2048 self-signed certs in `/ssl/duux_mqtt_bridge`.
+
+---
+
+## 🤝 Credits & Acknowledgements
+
+- Based on and inspired by [LouisR-git/duux-fan-local](https://github.com/LouisR-git/duux-fan-local).
+- Community forks are warmly welcomed to add support for more Duux devices or new features.
+
+*Crafted with 🤖 AI Slop & 🌀 Vibe Coding.*
